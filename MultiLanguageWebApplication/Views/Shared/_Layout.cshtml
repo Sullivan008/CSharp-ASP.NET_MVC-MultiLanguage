@@ -5,71 +5,42 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>@ViewBag.Title - My ASP.NET Application</title>
     @Styles.Render("~/Content/css")
-    @Scripts.Render("~/bundles/modernizr")
-
-    <!--SCRIPT-ek definiálása-->
-    <script src="~/Scripts/jquery-3.2.1.min.js"></script>
-
-    <!--Style elkészítése, hogy az alkalmazás neve középen jelenjen meg a NavBar-on-->
-    <style>
-        .navbar-brand {
-            position: absolute;
-            width: 100%;
-            left: 0;
-            text-align: center;
-            margin: 0 auto;
-        }
-    </style>
+    @Scripts.Render("~/bundles/jquery")
 
     @{
-        /// Elkészít egy SelectList-et a Nyelv kiválasztásához szükséges DropDownList-hez
         SelectList GetLanguageDictionaryElement()
         {
             int previouslySelectedLanguageIndex = 0;
-            HttpCookie languageCookie = System.Web.HttpContext.Current.Request.Cookies["Language"];
+            HttpCookie languageCookie = HttpContext.Current.Request.Cookies["Language"];
 
-            /// SelectList-hez tartozó ListItem-ek definiálása
-            HashSet<SelectListItem> list = new MultiLanguageWebApplication.Controllers.Classes.Dictionary.LanguageDictionary().GetLanguageSelectListItem();
+            HashSet<SelectListItem> list =
+                new MultiLanguageWebApplication.Controllers.Classes.Dictionary.LanguageDictionary().GetLanguageSelectListItem();
 
-            /// Vizsgálat, hogy a Cookie-kban található-e már korábbi nyelvi kód,
-            /// azaz választottunk-e már korábban nyelvet
-            if (languageCookie != null && languageCookie.Value != null)
+            if (languageCookie?.Value != null)
             {
-                foreach (SelectListItem item in list)
+                foreach (var item in list.Where(item => item.Text == languageCookie.Value))
                 {
-                    /// Ha a Cookie-ban található nyelvi kód (EN, stb..) megegyezik 
-                    /// valamelyik ListItem-ben található nyelvi kóddal, akkor annak
-                    /// kiolvassuk az indexét
-                    if (item.Text == languageCookie.Value)
-                    {
-                        previouslySelectedLanguageIndex = Int32.Parse(item.Value);
-                        break;
-                    }
+                    previouslySelectedLanguageIndex = Int32.Parse(item.Value);
+                    break;
                 }
             }
 
-            /// Visszaadunk egy olyan SelectList-et, amelyben az esetleg, már korábban
-            /// kiválasztott nyelvi kóddal rendelkező elem ki van belőle választva
             return new SelectList(list, "Value", "Text", previouslySelectedLanguageIndex);
         }
     }
 </head>
 <body style="padding-top:0px;">
-    <!--Navbar definiálása-->
     <nav class="navbar navbar-default" role="navigation">
-        <!--Header elkészítése-->
         <div class="navbar-header">
-            <!--Alkalmazás nevének kiírása-->
             <div class="navbar-brand">@MultiLanguageWebApplication.Resources.Shared.SharedTexts.ExampleLabel</div>
         </div>
-        <!--Body elkészítése-->
+
         <div class="navbar-collapse collapse">
-            <!--Bal oldalra definiálódnak a Nyelv kiválasztásához szüksgées elemek-->
             <ul class="nav navbar-nav navbar-left">
                 <li scale="0" style="margin-top: 15px; margin-right: 10px;">@MultiLanguageWebApplication.Resources.Shared.SharedTexts.Language</li>
-                <li scale="0" style="margin-top: 7px; margin-bottom: -10px">@Html.DropDownList("Languages", GetLanguageDictionaryElement(), new { @class = "form-control" } )</li>
+                <li scale="0" style="margin-top: 7px; margin-bottom: -10px">@Html.DropDownList("Languages", GetLanguageDictionaryElement(), new { @class = "form-control" })</li>
             </ul>
-            <!--Jobb oldalra definiálódnak a navigáláshoz szükséges ActionLink-ek-->
+
             <ul class="nav navbar-nav navbar-right">
                 <li>@Html.ActionLink(MultiLanguageWebApplication.Resources.Shared.SharedTexts.Home, "Index", "Home")</li>
                 <li>@Html.ActionLink(MultiLanguageWebApplication.Resources.Shared.SharedTexts.SecondPage, "Index", "SecondPage")</li>
@@ -78,42 +49,33 @@
     </nav>
 
     <div class="container body-content">
-        <!--Törzs definiálása-->
+
         @RenderBody()
         <hr />
-        <!--Lábléc definiálása-->
+
         <footer>
             <p>&copy; @DateTime.Now.Year - @MultiLanguageWebApplication.Resources.Shared.SharedTexts.ExampleLabel</p>
         </footer>
     </div>
 
-<!--SCRIPT-ek definiálása-->
-<script>
-    /// Ha a DOM teljesen betöltött, akkor...
-    $(document).ready(function () {
-        /// Az Nyelv választó DropDownList-ben található elem kiválasztásakor
-        /// fusson le a metódus. A metódus eredménye, hogy az oldal, a kiválasztott
-        /// nyelven fog megjelenni
-        $('#Languages').change(function () {
+    <script>
+        $(document).ready(function () {
+            $('#Languages').change(function () {
+                var selectedLanguage = $("#Languages option:selected").text();
 
-            /// A nyelv listában kiválasztott elem szöveges értéke (Language Text)
-            var selectedLanguage = $("#Languages option:selected").text();
-
-            /// AJAX - Asyncron JavaScript And XML
-            $.ajax({
-                type            : "GET",                                                        /// Kérés típusa
-                url             : "/Language/Change?LanguageAbbrevation=" + selectedLanguage,   /// Hol érhető el (Controller/MethodName)
-                success         : function () {                                                 /// Ha skeresen lefutott az AJAX kérés
-                    /// Az aktuális oldal újratöltése
-                    location.reload();
-                }
-            })
+                $.ajax({
+                    type: "GET",
+                    url: "/Language/Change?languageAbbreviation=" + selectedLanguage,
+                    success: function () {
+                        location.reload();
+                    }
+                });
+            });
         })
-    })
-</script>
+    </script>
 
-    @Scripts.Render("~/bundles/jquery")
     @Scripts.Render("~/bundles/bootstrap")
+
     @RenderSection("scripts", required: false)
 </body>
 </html>
