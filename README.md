@@ -9,6 +9,14 @@ About the application technologies and operation:
 - Descriptive Language: HTML5
 - Style Description Language: CSS (Bootstrap 3.3.7)
  
+### Installation/ Configuration:
+
+1. Restore necessary Packages, run the following command in **PM Console**
+
+   ```
+   Update-Package -reinstall
+   ```
+ 
 ### About the application:
 
 **.NET Framework** and **ASP.NET** has localization support using resources files which helps us to localize the views and thus preventing the need to build separate website for each locales.
